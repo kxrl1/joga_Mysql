@@ -11,45 +11,40 @@ app.engine('hbs', hbs.engine({ extname: 'hbs', defaultLayout: 'main', layoutsDir
 
 app.use(express.static('public'));
 
-app.use(express.static('public'));
-
 const mysql = require('mysql2');
 
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "qwerty",
-    database: "joga_mysql"
-});
+
+
+const articleRoutes = require('./routes/article');
+
+app.use('/', articleRoutes);
+app.use('/article', articleRoutes);
 
 con.connect((err) => {
     if(err) throw err;
     console.log("Connected to MySQL database!");
 })
 
-app.get('/', (req, res) => {
-    let query = "SELECT * FROM articles";
-    let articles = [];
-    con.query(query, (err, result) => {
-        if(err) throw err;
-        articles = result;
-        res.render('index',{
-            articles: articles
-        })
-    })
-});
-
-app.get('/article/:slug', (req, res) => {
-    let query = `SELECT * FROM articles WHERE slug='${req.params.slug}'`
+app.get('/author/:author_id', (req, res) => {
+    let query = `SELECT *, article.name as article_name, author.name as author_name FROM articles INNER JOIN author ON author_id = author.id WHERE author_id='${req.params.author_id}'`;
     let article
     con.query(query, (err, result) => {
         if(err) throw err;
         article = result;
-        res.render('index',{
-            article: article
+        console.log(article)
+        query = `SELECT * FROM author WHERE id='${req.params.author_id}'`;
+        let author
+        con.query(query, (err, result) => {
+            if(err) throw err;
+            author = result
+            console.log(author)
+            res.render('author',{
+                author: author,
+                article: article,
+            })
         })
     })
 });
